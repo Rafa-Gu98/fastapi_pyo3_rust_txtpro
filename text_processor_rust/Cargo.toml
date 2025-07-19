@@ -1,0 +1,18 @@
+[package]
+name = "text_processor_rust"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Fast text processing extension written in Rust"
+
+[lib]
+name = "text_processor_rust"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.20", features = ["extension-module"] }
+regex = "1.10"
+rayon = "1.8"  # For parallel processing
+
+[profile.dev]
+opt-level = 3
