@@ -1,7 +1,9 @@
+from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .models import TextInput, WordCountResponse, EmailResponse, CleanTextResponse
-from .services import TextProcessorService
+from pydantic import Field
+from .models import TextInput, WordCountResponse, EmailResponse, CleanTextResponse, SentimentInput, SentimentResponse
+from .services import TextProcessorService, SentimentService
 import logging
 from scalar_fastapi import get_scalar_api_reference
 
@@ -67,6 +69,28 @@ async def clean_text(input_data: TextInput):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "rust_extension": "loaded"}
+
+@app.post(
+    "/analyze-sentiment",
+    response_model=SentimentResponse,
+    summary="Analyze text sentiment",
+    description="Analyze the sentiment of input text using high-performance Rust algorithms",
+    tags=["Text Analysis"]
+)
+async def analyze_sentiment(input_data: SentimentInput):
+    """
+    Analyze sentiment of input text.
+    
+    Returns sentiment score, label, confidence, and identified emotional words.
+    """
+    try:
+        result = SentimentService.analyze_sentiment(input_data.text)
+        return SentimentResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 if __name__ == "__main__":
     import uvicorn

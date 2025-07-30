@@ -2,6 +2,9 @@ use pyo3::prelude::*;
 use regex::Regex;
 use rayon::prelude::*;
 use std::collections::HashMap;
+use pyo3::types::PyDict;
+mod sentiment;
+use sentiment::SentimentAnalyzer;
 
 /// Count word frequencies in text (computationally intensive)
 #[pyfunction]
@@ -44,11 +47,32 @@ fn clean_text(text: &str) -> PyResult<String> {
     Ok(cleaned_lines.join("\n"))
 }
 
+#[pyfunction]
+fn analyze_sentiment(text: &str) -> PyResult<PyObject> {
+    let analyzer = SentimentAnalyzer::new();
+    let result = analyzer.analyze(text);
+    
+    Python::with_gil(|py| {
+        let dict = PyDict::new(py);
+        dict.set_item("score", result.score)?;
+        dict.set_item("label", result.label)?;
+        dict.set_item("confidence", result.confidence)?;
+        dict.set_item("word_count", result.word_count)?;
+        dict.set_item("positive_words", result.positive_words)?;
+        dict.set_item("negative_words", result.negative_words)?;
+        dict.set_item("language", result.language)?;
+        Ok(dict.into())
+    })
+}
+
 /// A Python module implemented in Rust
 #[pymodule]
 fn text_processor_rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(count_words, m)?)?;
     m.add_function(wrap_pyfunction!(extract_emails, m)?)?;
     m.add_function(wrap_pyfunction!(clean_text, m)?)?;
+    // 新增情感分析函数
+    m.add_function(wrap_pyfunction!(analyze_sentiment, m)?)?;
+
     Ok(())
 }

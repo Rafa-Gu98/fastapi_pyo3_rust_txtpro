@@ -1,7 +1,7 @@
 import pytest
 import time
 import statistics
-from app.services import TextProcessorService
+from app.services import TextProcessorService, SentimentService
 
 class TestPerformanceComparison:
     """Performance comparison tests"""
@@ -106,3 +106,96 @@ class TestMemoryPerformance:
         
         # Memory increase should be limited
         assert memory_increase < 50 * 1024 * 1024  # Less than 50MB
+
+
+class TestSentimentPerformance:
+    
+    def test_english_sentiment_performance(self):
+        """测试英文情感分析性能"""
+        # 大文本测试 - 英文
+        large_text = "This is an amazing product with excellent quality! " * 200  # 约2000词
+        
+        start_time = time.time()
+        result = SentimentService.analyze_sentiment(large_text)
+        end_time = time.time()
+        
+        processing_time = end_time - start_time
+        
+        # 性能断言：处理2000词应该在50ms内完成
+        assert processing_time < 0.05
+        assert result['processing_time_ms'] < 50
+        assert result['word_count'] > 1000
+        assert result['language'] == 'en'
+    
+    def test_chinese_sentiment_performance(self):
+        """测试中文情感分析性能"""
+        # 大文本测试 - 中文
+        large_text = "这是一个非常棒的产品，质量很好，我很喜欢！" * 200  # 约2000字符
+        
+        start_time = time.time()
+        result = SentimentService.analyze_sentiment(large_text)
+        end_time = time.time()
+        
+        processing_time = end_time - start_time
+        
+        # 中文分词可能稍慢，但至少应在80ms内
+        assert processing_time < 0.08
+        assert result['processing_time_ms'] < 80
+        assert result['word_count'] > 200
+        assert result['language'] == 'zh'
+    
+    def test_mixed_language_performance(self):
+        """测试混合语言性能"""
+        mixed_text = "这个 product 很好，quality 是 excellent！" * 100
+        
+        start_time = time.time()
+        result = SentimentService.analyze_sentiment(mixed_text)
+        end_time = time.time()
+        
+        processing_time = end_time - start_time
+        
+        assert processing_time < 0.05
+        assert result['language'] == 'mixed'
+    
+    def test_parallel_processing_performance(self):
+        """测试并行处理性能"""
+        import concurrent.futures
+        
+        test_texts = [
+            "This is amazing! I love it.",
+            "这个产品很棒，我很喜欢。",
+            "Terrible quality, very disappointed.",
+            "质量太差了，很失望。",
+            "Not bad, could be better.",
+        ] * 20  # 100个文本
+        
+        start_time = time.time()
+        
+        # 并行处理
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            results = list(executor.map(SentimentService.analyze_sentiment, test_texts))
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+        
+        # 100个文本并行处理应该在1秒内完成
+        assert total_time < 1.0
+        assert len(results) == 100
+    
+    @pytest.mark.benchmark
+    def test_sentiment_benchmark_english(self, benchmark):
+        """英文情感分析基准测试"""
+        text = "This is a great product with excellent features and amazing quality!"
+        
+        result = benchmark(SentimentService.analyze_sentiment, text)
+        assert result['label'] == 'positive'
+        assert result['language'] == 'en'
+    
+    @pytest.mark.benchmark
+    def test_sentiment_benchmark_chinese(self, benchmark):
+        """中文情感分析基准测试"""
+        text = "这是一个很棒的产品，功能很好，质量也很优秀！"
+        
+        result = benchmark(SentimentService.analyze_sentiment, text)
+        assert result['label'] == 'positive'
+        assert result['language'] == 'zh'
