@@ -65,7 +65,12 @@ fastapi-rust-text-processor/
 │   ├── Cargo.toml              # Rust project configuration
 │   ├── pyproject.toml          # Python build configuration
 │   └── src/
-│       └── lib.rs              # Rust core implementation
+│       ├── lib.rs              # Rust core implementation
+│       └── sentiment.rs        # Sentiment mod
+│           ├── tokenizer.rs    # Tokenizes text
+│           ├── dictionary.rs   # Manages sentiment dictionary
+│           ├── rules.rs        # Defines classification rules
+│           └── analyzer.rs     # Combines & analysis
 ├── app/                        # FastAPI application
 │   ├── __init__.py
 │   ├── main.py                 # Main application entry
@@ -78,10 +83,12 @@ fastapi-rust-text-processor/
 │   ├── test_services.py        # Business logic tests
 │   ├── test_api.py             # API endpoint tests
 │   ├── test_performance.py     # Performance comparison tests
+│   ├── test_sentiment.py       # Sentiment tests
 │   └── test_integration.py     # Integration tests
 ├── examples/                   # Example code
 │   ├── basic_usage.py          # Basic usage example
-│   ├── performance_demo.py     # Performance demonstration script
+│   ├── performance_demo.py     # Performance demonstration script 
+│   ├── sentiment_demo.py       # Sentiment script 
 │   └── batch_processing.py     # Batch processing example             
 ├── requirements.txt            # Python dependencies
 ├── requirements-dev.txt        # Development dependencies

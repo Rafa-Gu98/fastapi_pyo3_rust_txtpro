@@ -1,7 +1,5 @@
-from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import Field
 from .models import TextInput, WordCountResponse, EmailResponse, CleanTextResponse, SentimentInput, SentimentResponse
 from .services import TextProcessorService, SentimentService
 import logging
@@ -88,7 +86,7 @@ async def analyze_sentiment(input_data: SentimentInput):
         return SentimentResponse(**result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
